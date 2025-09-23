@@ -40,64 +40,27 @@ def gerar_script():
         messagebox.showwarning("Aviso", "Informe a unidade onde o script será salvo!")
         return
 
-    if not programas:
-        messagebox.showwarning("Aviso", "Nenhum programa adicionado!")
+    # Caminho do script que já existe na pasta
+    caminho_origem = os.path.join(os.path.dirname(__file__), "script.ps1")
+
+    if not os.path.exists(caminho_origem):
+        messagebox.showerror("Erro", f"O arquivo 'script.ps1' não foi encontrado na pasta do projeto!")
         return
 
-    script = [
-        "# =========================================",
-        "# Script: instalar_programas.ps1",
-        "# Função: Instalar múltiplos programas em modo silencioso (copiando p/ TEMP)",
-        "# =========================================",
-        "",
-        "# Lista de programas (Nome, Caminho, Argumentos)",
-        "$programas = @("
-    ]
+    # Caminho de saída (onde será salvo na unidade escolhida)
+    caminho_saida = os.path.join(unidade, "script.ps1")
 
-    for prog in programas:
-        script.append(
-            f'    @{{ Nome = "{prog["Nome"]}"; Caminho = "{prog["Caminho"]}"; Args = "{prog["Args"]}" }},'
-        )
-
-    # Remove a vírgula do último item
-    if script[-1].endswith(","):
-        script[-1] = script[-1][:-1]
-
-    script.append(")")
-    script.append("")
-    script.append("# Loop para instalar")
-    script.append("foreach ($prog in $programas) {")
-    script.append("    if (Test-Path $prog.Caminho) {")
-    script.append("        Write-Host \"Preparando instalação de $($prog.Nome)...\"")
-    script.append("")
-    script.append("        try {")
-    script.append("            $Destino = Join-Path $env:TEMP (Split-Path $prog.Caminho -Leaf)")
-    script.append("            Copy-Item $prog.Caminho $Destino -Force")
-    script.append("            Unblock-File -Path $Destino -ErrorAction SilentlyContinue")
-    script.append("            Write-Host \"Iniciando instalação silenciosa de $($prog.Nome)...\"")
-    script.append("            Start-Process -FilePath $Destino -ArgumentList $prog.Args -Wait")
-    script.append("            Remove-Item $Destino -Force")
-    script.append("            Write-Host \"Instalação de $($prog.Nome) concluída!\"")
-    script.append("        }")
-    script.append("        catch {")
-    script.append("            Write-Host \"Erro ao instalar $($prog.Nome): $_\"")
-    script.append("        }")
-    script.append("        Write-Host \"-----------------------------------------\"")
-    script.append("    } else {")
-    script.append("        Write-Host \"Arquivo não encontrado: $($prog.Caminho)\"")
-    script.append("    }")
-    script.append("}")
-    script.append("")
-    script.append("Write-Host \"Todas as instalações foram concluídas!\"")
-
-    # Salvar script na unidade escolhida
-    caminho_saida = os.path.join(unidade, "instalar_programas.ps1")
     try:
-        with open(caminho_saida, "w", encoding="utf-8") as f:
-            f.write("\n".join(script))
-        messagebox.showinfo("Sucesso", f"Script gerado em:\n{caminho_saida}")
+        with open(caminho_origem, "r", encoding="utf-8-sig") as f_origem:
+            conteudo = f_origem.read()
+
+        with open(caminho_saida, "w", encoding="utf-8-sig") as f_destino:
+            f_destino.write(conteudo)
+
+        messagebox.showinfo("Sucesso", f"Script copiado para:\n{caminho_saida}")
     except Exception as e:
-        messagebox.showerror("Erro", f"Erro ao salvar script: {e}")
+        messagebox.showerror("Erro", f"Erro ao copiar script: {e}")
+
 
 
 # ================== INTERFACE ==================
